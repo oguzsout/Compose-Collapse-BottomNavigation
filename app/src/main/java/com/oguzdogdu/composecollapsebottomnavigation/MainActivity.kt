@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -29,7 +30,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.oguzdogdu.composecollapsebottomnavigation.navigation.BottomScreen
 import com.oguzdogdu.composecollapsebottomnavigation.navigation.bottomNavigationItems
@@ -42,9 +42,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ComposeCollapseBottomNavigationTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-
                     BottomCollapse()
                 }
             }
@@ -53,30 +51,28 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun BottomCollapse() {
+fun BottomCollapse() {
     val bottomBarHeight = 55.dp
     val bottomBarHeightPx = with(LocalDensity.current) {
         bottomBarHeight.roundToPx().toFloat()
     }
-    val bottomBarOffsetHeightPx = remember {
-        mutableStateOf(0f)
-    }
+    val bottomBarOffsetHeightPx = remember { mutableStateOf(0f) }
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
                 val newOffset = bottomBarOffsetHeightPx.value + delta
-                bottomBarOffsetHeightPx.value = newOffset.coerceIn(bottomBarHeightPx, 0f)
+                bottomBarOffsetHeightPx.value = newOffset.coerceIn(-bottomBarHeightPx, 0f)
                 return Offset.Zero
             }
         }
     }
-
     val scaffoldState = rememberScaffoldState()
-    val navController = rememberNavController()
+    rememberNavController()
 
     Scaffold(
-        modifier = Modifier.nestedScroll((nestedScrollConnection)), scaffoldState = scaffoldState,
+        modifier = Modifier.nestedScroll(nestedScrollConnection),
+        scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = {
@@ -91,13 +87,33 @@ private fun BottomCollapse() {
             )
         },
         bottomBar = {
-            BottomAppBar(modifier = Modifier
-                .height(bottomBarHeight)
-                .offset {
-                    IntOffset(x = 0, y = -bottomBarOffsetHeightPx.value.roundToInt())
-                }) {
-                AppBottomNavigation(navController, bottomNavigationItems)
+            BottomAppBar(
+                modifier = Modifier
+                    .graphicsLayer {
+                        shape = RoundedCornerShape(
+                            topStart = 20.dp,
+                            topEnd = 20.dp,
+                            bottomStart = 20.dp,
+                            bottomEnd = 20.dp
 
+                        )
+                        clip = true
+                    }
+                    .background(
+                        color = MaterialTheme.colors.background, shape = RoundedCornerShape(
+                            topStart = 20.dp,
+                            topEnd = 20.dp,
+                            bottomStart = 20.dp,
+                            bottomEnd = 20.dp
+                        )
+                    )
+                    .height(bottomBarHeight)
+                    .offset {
+                        IntOffset(x = 0, y = -bottomBarOffsetHeightPx.value.roundToInt())
+
+                    }
+            ) {
+                AppBottomNavigation(bottomNavigationItems)
             }
         },
         content = { innerPadding ->
@@ -108,13 +124,16 @@ private fun BottomCollapse() {
                             .fillMaxWidth()
                             .height(100.dp)
                             .padding(10.dp, 5.dp, 10.dp, 5.dp)
-                            .background(
-                                Color.White
-                            ), elevation = 10.dp,
+                            .background(Color.White),
+                        elevation = 10.dp,
                         shape = RoundedCornerShape(5.dp)
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(
+                            modifier = Modifier.padding(10.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.cat),
                                     contentDescription = "Cat Image",
@@ -123,11 +142,13 @@ private fun BottomCollapse() {
                                         .size(60.dp)
                                         .clip(CircleShape)
                                 )
+
                                 Spacer(modifier = Modifier.padding(5.dp))
 
                                 Column {
                                     Text(
-                                        text = "Sample Test", color = Color.Black,
+                                        text = "Sample Test",
+                                        color = Color.Black,
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -135,43 +156,62 @@ private fun BottomCollapse() {
                                     Spacer(modifier = Modifier.padding(2.dp))
 
                                     Text(
-                                        text = "Lorem Ipsum is simply dummy text of the printing and type setting industry.",
+                                        text = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
                                         color = Color.Gray,
                                         fontSize = 12.sp
                                     )
-
                                 }
                             }
-
                         }
-
                     }
                 }
             }
         }
-
     )
-
 }
 
 @Composable
 fun AppBottomNavigation(
-    navController: NavHostController,
     bottomNavigationItems: List<BottomScreen>
 ) {
-    BottomNavigation {
-        bottomNavigationItems.forEach { bottomScreen ->
-            BottomNavigationItem(selected = false, onClick = {
-                //Handle bottom navigation item click
-
-
-            }, icon = {
-                Icon(
-                    bottomScreen.icon, contentDescription = null
+    BottomNavigation(
+        modifier = Modifier
+            .graphicsLayer {
+                shape = RoundedCornerShape(
+                    topStart = 20.dp,
+                    topEnd = 20.dp,
+                    bottomStart = 20.dp,
+                    bottomEnd = 20.dp
                 )
-            },
+                clip = true
+            }
+            .background(
+                color = MaterialTheme.colors.primary,
+                shape = RoundedCornerShape(
+                    topStart = 20.dp,
+                    topEnd = 20.dp,
+                    bottomStart = 20.dp,
+                    bottomEnd = 20.dp
+                )
+            )
+
+    ) {
+        bottomNavigationItems.forEach { bottomScreen ->
+            BottomNavigationItem(
+                selected = false,
+                onClick = {
+                    //Handle bottom navigation item click
+                },
+                icon = {
+                    Icon(
+                        bottomScreen.icon,
+                        contentDescription = null
+                    )
+                },
                 label = {
-                    Text(text = bottomScreen.title)
+                    Text(
+                        text = bottomScreen.title
+                    )
                 },
                 alwaysShowLabel = false
             )
